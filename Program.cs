@@ -12,18 +12,21 @@ builder.Services.AddDbContext<MovieDBContext>(options =>
 
 var app = builder.Build();
 
-// Автоматическое применение миграций при запуске
+// Автоматическое создание/обновление базы данных при запуске
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<MovieDBContext>();
     try
     {
-        dbContext.Database.Migrate();
-        Console.WriteLine("Миграции успешно применены");
+        // Создаем базу данных, если её нет
+        dbContext.Database.EnsureCreated();
+        // Или используйте Migrate() если у вас есть миграции
+        // dbContext.Database.Migrate();
+        Console.WriteLine("База данных успешно создана/проверена");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Ошибка при применении миграций: {ex.Message}");
+        Console.WriteLine($"Ошибка при работе с базой данных: {ex.Message}");
     }
 }
 

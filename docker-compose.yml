@@ -1,21 +1,6 @@
 version: '3.8'
 
 services:
-  mvc-movie-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: mvc-movie-app
-    ports:
-      - "5000:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development  # <-- ВАЖНО: добавляем эту строку
-      - ConnectionStrings__MovieDBContext=Server=sql-server;Database=MovieDB;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=True;MultipleActiveResultSets=true
-    depends_on:
-      - sql-server
-    networks:
-      - movie-network
-
   sql-server:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sql-server
@@ -26,12 +11,32 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - sql-data:/var/opt/mssql
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong@Password" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - movie-network
+
+  app:
+    build: .
+    container_name: mvc-movie-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__MovieDBContext=Server=sql-server;Database=MovieDB;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=True;MultipleActiveResultSets=true
+    ports:
+      - "5000:80"
+    depends_on:
+      sql-server:
+        condition: service_healthy
     networks:
       - movie-network
 
 volumes:
-  sql-data:
+  mssql_data:
 
 networks:
   movie-network:
