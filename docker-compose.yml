@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mvc-movie-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mvc-movie-app
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development  # <-- ВАЖНО: добавляем эту строку
+      - ConnectionStrings__MovieDBContext=Server=sql-server;Database=MovieDB;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=True;MultipleActiveResultSets=true
+    depends_on:
+      - sql-server
+    networks:
+      - movie-network
+
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sql-server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    networks:
+      - movie-network
+
+volumes:
+  sql-data:
+
+networks:
+  movie-network:
+    driver: bridge
