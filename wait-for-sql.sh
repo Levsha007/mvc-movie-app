@@ -1,18 +1,23 @@
 #!/bin/bash
-# Ожидание готовности SQL Server
+set -e
+
 echo "Ожидание готовности SQL Server..."
-for i in {1..50};
+max_retries=30
+counter=0
+
+# Ждем пока SQL Server будет готов
+until /opt/mssql-tools18/bin/sqlcmd -S sql-server -U sa -P YourStrong@Password -C -Q "SELECT 1" &> /dev/null
 do
-    /opt/mssql-tools/bin/sqlcmd -S sql-server -U sa -P YourStrong@Password -Q "SELECT 1" &> /dev/null
-    if [ $? -eq 0 ]
-    then
-        echo "SQL Server готов!"
-        break
-    else
-        echo "Ожидание SQL Server... (попытка $i)"
-        sleep 2
+    counter=$((counter+1))
+    if [ $counter -gt $max_retries ]; then
+        echo "Превышено время ожидания SQL Server"
+        exit 1
     fi
+    echo "Ожидание SQL Server... (попытка $counter/$max_retries)"
+    sleep 2
 done
 
-# Запуск приложения
+echo "SQL Server готов! Запускаем приложение..."
+
+# Запускаем приложение
 dotnet MvcMovie.dll

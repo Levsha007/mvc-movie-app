@@ -12,16 +12,14 @@ builder.Services.AddDbContext<MovieDBContext>(options =>
 
 var app = builder.Build();
 
-// Автоматическое создание/обновление базы данных при запуске
+// Автоматическое создание базы данных при запуске
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<MovieDBContext>();
     try
     {
-        // Создаем базу данных, если её нет
+        // Пытаемся создать базу данных, если её нет
         dbContext.Database.EnsureCreated();
-        // Или используйте Migrate() если у вас есть миграции
-        // dbContext.Database.Migrate();
         Console.WriteLine("База данных успешно создана/проверена");
     }
     catch (Exception ex)
