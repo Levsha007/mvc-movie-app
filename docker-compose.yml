@@ -24,7 +24,7 @@ services:
     container_name: mvc-movie-app
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_URLS=http://0.0.0.0:80
       - ConnectionStrings__MovieDBContext=Server=sql-server;Database=MovieDB;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=True;MultipleActiveResultSets=true
     ports:
       - "5000:80"

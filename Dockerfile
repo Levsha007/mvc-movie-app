@@ -7,11 +7,10 @@ RUN dotnet restore "MvcMovie.csproj"
 COPY . .
 RUN dotnet publish "MvcMovie.csproj" -c Release -o /app/publish
 
-# Финальный образ с установкой mssql-tools
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
 
-# Устанавливаем mssql-tools для healthcheck
+# Устанавливаем mssql-tools
 RUN apt-get update && \
     apt-get install -y curl gnupg2 && \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
@@ -21,15 +20,13 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Добавляем sqlcmd в PATH
 ENV PATH="$PATH:/opt/mssql-tools18/bin"
 
 COPY --from=build /app/publish .
 
-EXPOSE 80
-
-# Простой скрипт ожидания
 COPY wait-for-sql.sh .
 RUN chmod +x wait-for-sql.sh
+
+EXPOSE 80
 
 CMD ["./wait-for-sql.sh"]

@@ -48,4 +48,15 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Выводим URL для доступа к приложению
+var urls = app.Urls;
+Console.WriteLine("=== MVC Movie App Started ===");
+Console.WriteLine($"Application started. Access at: http://localhost:5000");
+if (Environment.GetEnvironmentVariable("CODESPACE_NAME") != null)
+{
+    var codespaceName = Environment.GetEnvironmentVariable("CODESPACE_NAME");
+    Console.WriteLine($"Codespaces URL: https://{codespaceName}-5000.app.github.dev");
+}
+Console.WriteLine("=============================");
+
 app.Run();
