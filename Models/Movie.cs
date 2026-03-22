@@ -1,5 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace MvcMovie.Models
 {
@@ -7,21 +9,32 @@ namespace MvcMovie.Models
     {
         public int ID { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required(ErrorMessage = "Title is required")]
+        [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters")]
+        [Display(Name = "Title")]
         public string Title { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Release date is required")]
         [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         [Display(Name = "Release Date")]
         public DateTime ReleaseDate { get; set; }
 
-        [Required]
-        [StringLength(30)]
+        [Required(ErrorMessage = "Genre must be specified")]
+        [StringLength(30, ErrorMessage = "Genre cannot be longer than 30 characters")]
+        [Display(Name = "Genre")]
         public string Genre { get; set; } = string.Empty;
 
+        [Range(1, 100, ErrorMessage = "Price must be between $1 and $100")]
         [DataType(DataType.Currency)]
-        [Range(0, 1000)]
+        [DisplayFormat(DataFormatString = "{0:C0}", ApplyFormatInEditMode = false)]
+        [Display(Name = "Price")]
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
+
+        [StringLength(5, ErrorMessage = "Rating cannot be longer than 5 characters")]
+        [Display(Name = "Rating")]
+        public string Rating { get; set; } = string.Empty;
     }
 
     public class MovieDBContext : DbContext
@@ -35,7 +48,6 @@ namespace MvcMovie.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Настройка точности для decimal
             modelBuilder.Entity<Movie>()
                 .Property(m => m.Price)
                 .HasPrecision(18, 2);

@@ -12,19 +12,25 @@ builder.Services.AddDbContext<MovieDBContext>(options =>
 
 var app = builder.Build();
 
-// Автоматическое создание базы данных при запуске
+// Инициализация базы данных тестовыми данными
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<MovieDBContext>();
+    var services = scope.ServiceProvider;
     try
     {
-        // Пытаемся создать базу данных, если её нет
-        dbContext.Database.EnsureCreated();
-        Console.WriteLine("База данных успешно создана/проверена");
+        var context = services.GetRequiredService<MovieDBContext>();
+        
+        // Применяем миграции или создаем базу данных
+        context.Database.EnsureCreated();
+        
+        // Заполняем тестовыми данными
+        MovieInitializer.Initialize(services);
+        
+        Console.WriteLine("База данных успешно инициализирована");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Ошибка при работе с базой данных: {ex.Message}");
+        Console.WriteLine($"Ошибка при инициализации базы данных: {ex.Message}");
     }
 }
 

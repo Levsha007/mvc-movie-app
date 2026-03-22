@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MvcMovie.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace MvcMovie.Controllers
 {
@@ -17,6 +18,35 @@ namespace MvcMovie.Controllers
         public async Task<IActionResult> Index()
         {
             return View(await _context.Movies.ToListAsync());
+        }
+
+        // GET: Movies/SearchIndex
+        public async Task<IActionResult> SearchIndex(string movieGenre, string searchString)
+        {
+            // Используем LINQ для получения списка жанров
+            IQueryable<string> genreQuery = from m in _context.Movies
+                                            orderby m.Genre
+                                            select m.Genre;
+
+            var movies = from m in _context.Movies
+                         select m;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title.Contains(searchString));
+            }
+
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
+            var genreList = new SelectList(await genreQuery.Distinct().ToListAsync());
+            ViewBag.movieGenre = genreList;
+            ViewBag.CurrentGenre = movieGenre;
+            ViewBag.CurrentSearch = searchString;
+
+            return View(await movies.ToListAsync());
         }
 
         // GET: Movies/Details/5
@@ -46,12 +76,13 @@ namespace MvcMovie.Controllers
         // POST: Movies/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Title,ReleaseDate,Genre,Price")] Movie movie)
+        public async Task<IActionResult> Create([Bind("ID,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(movie);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Movie created successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View(movie);
@@ -76,7 +107,7 @@ namespace MvcMovie.Controllers
         // POST: Movies/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,ReleaseDate,Genre,Price")] Movie movie)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (id != movie.ID)
             {
@@ -89,6 +120,7 @@ namespace MvcMovie.Controllers
                 {
                     _context.Update(movie);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Movie updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -133,9 +165,10 @@ namespace MvcMovie.Controllers
             if (movie != null)
             {
                 _context.Movies.Remove(movie);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Movie deleted successfully!";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
