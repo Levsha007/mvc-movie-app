@@ -6,9 +6,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Register MovieDBContext with SQL Server
+// Register MovieDBContext with SQLite (для Render)
+var connectionString = builder.Configuration.GetConnectionString("MovieDBContext");
+if (string.IsNullOrEmpty(connectionString))
+{
+    connectionString = "Data Source=movies.db";
+}
 builder.Services.AddDbContext<MovieDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MovieDBContext")));
+    options.UseSqlite(connectionString));
 
 var app = builder.Build();
 
@@ -23,8 +28,23 @@ using (var scope = app.Services.CreateScope())
         // Применяем миграции или создаем базу данных
         context.Database.EnsureCreated();
         
-        // Заполняем тестовыми данными
-        MovieInitializer.Initialize(services);
+        // Заполняем тестовыми данными, если БД пуста
+        if (!context.Movies.Any())
+        {
+            var movies = new List<Movie>
+            {
+                new Movie { Title = "When Harry Met Sally", ReleaseDate = DateTime.Parse("1989-1-11"), Genre = "Romantic Comedy", Rating = "R", Price = 7.99M },
+                new Movie { Title = "Ghostbusters", ReleaseDate = DateTime.Parse("1984-3-13"), Genre = "Comedy", Rating = "PG", Price = 8.99M },
+                new Movie { Title = "Ghostbusters 2", ReleaseDate = DateTime.Parse("1986-2-23"), Genre = "Comedy", Rating = "PG", Price = 9.99M },
+                new Movie { Title = "Rio Bravo", ReleaseDate = DateTime.Parse("1959-4-15"), Genre = "Western", Rating = "PG", Price = 3.99M },
+                new Movie { Title = "The Matrix", ReleaseDate = DateTime.Parse("1999-3-31"), Genre = "Sci-Fi", Rating = "R", Price = 12.99M },
+                new Movie { Title = "The Godfather", ReleaseDate = DateTime.Parse("1972-3-24"), Genre = "Drama", Rating = "R", Price = 14.99M }
+            };
+            
+            context.Movies.AddRange(movies);
+            context.SaveChanges();
+            Console.WriteLine("База данных успешно инициализирована тестовыми данными");
+        }
         
         Console.WriteLine("База данных успешно инициализирована");
     }
@@ -49,14 +69,10 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // Выводим URL для доступа к приложению
-var urls = app.Urls;
-Console.WriteLine("=== MVC Movie App Started ===");
-Console.WriteLine($"Application started. Access at: http://localhost:5000");
-if (Environment.GetEnvironmentVariable("CODESPACE_NAME") != null)
-{
-    var codespaceName = Environment.GetEnvironmentVariable("CODESPACE_NAME");
-    Console.WriteLine($"Codespaces URL: https://{codespaceName}-5000.app.github.dev");
-}
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+Console.WriteLine($"=== MVC Movie App Started ===");
+Console.WriteLine($"Application started. Access at: http://0.0.0.0:{port}");
+Console.WriteLine($"Render URL: {Environment.GetEnvironmentVariable("RENDER_EXTERNAL_URL")}");
 Console.WriteLine("=============================");
 
 app.Run();

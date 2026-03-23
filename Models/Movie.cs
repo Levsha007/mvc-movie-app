@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace MvcMovie.Models
@@ -29,7 +28,6 @@ namespace MvcMovie.Models
         [DataType(DataType.Currency)]
         [DisplayFormat(DataFormatString = "{0:C0}", ApplyFormatInEditMode = false)]
         [Display(Name = "Price")]
-        [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
 
         [StringLength(5, ErrorMessage = "Rating cannot be longer than 5 characters")]
@@ -45,12 +43,5 @@ namespace MvcMovie.Models
         }
 
         public DbSet<Movie> Movies { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Movie>()
-                .Property(m => m.Price)
-                .HasPrecision(18, 2);
-        }
     }
 }

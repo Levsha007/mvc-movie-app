@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: mvc-movie-app
+    runtime: dotnet
+    plan: free
+    buildCommand: dotnet restore && dotnet publish -c Release -o output
+    startCommand: dotnet output/MvcMovie.dll
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+    healthCheckPath: /
